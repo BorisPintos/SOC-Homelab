@@ -368,71 +368,14 @@ El módulo de **Vulnerability Detection** de Wazuh realizó un escaneo completo 
 
 ---
 
-## Área 5 — ITSM & Gestión de Activos con GLPI 🎫
+## 🧪 Ejercicios Adicionales
 
-> **Objetivo:** Desplegar GLPI como plataforma central de gestión de servicios IT, integrarlo con el Active Directory del laboratorio mediante LDAP, inventariar los activos del entorno y demostrar el ciclo completo de resolución de tickets de soporte técnico.
+Laboratorios específicos documentados de forma independiente, cada uno con su propio objetivo, configuración detallada y evidencia visual. Haz clic en el ejercicio para ver la documentación completa.
 
-### 5.1 · Instalación de GLPI + Apache2 — Gestión de Conflicto de Puerto
-
-GLPI fue instalado sobre **Apache2** en el servidor Ubuntu del laboratorio. Al coexistir con el stack de **Wazuh** — que ya ocupaba el puerto 80 —, fue necesario reconfigurar Apache para escuchar en el puerto **8080**, evitando el conflicto y manteniendo ambos servicios operativos de forma simultánea.
-
-| Archivo modificado | Cambio aplicado |
-|---|---|
-| `/etc/apache2/ports.conf` | `Listen 80` → `Listen 8080` |
-| `/etc/apache2/sites-enabled/000-default.conf` | `<VirtualHost *:80>` → `<VirtualHost *:8080>` |
-
-![Edición de ports.conf para cambiar el puerto de Apache2 a 8080](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/Instalamos%20GLPI%20y%20apache2_como%20tenemos%20wazuh%20instalado%20cambiamos%20el%20puerto%20(1).png)
-
-![Edición del VirtualHost de Apache2 al puerto 8080](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/Tambien%20cambiamos%20el%20puerto%20de%20GLPI.png)
-
-*La coexistencia de múltiples servicios web en el mismo servidor es un escenario habitual en entornos de producción. Identificar y resolver el conflicto editando la configuración de Apache2 directamente desde la terminal es una habilidad cotidiana de administración Linux.*
-
----
-
-### 5.2 · Integración con Active Directory vía LDAP
-
-Configuración del conector **LDAP** en GLPI apuntando al Domain Controller del laboratorio (`SRV-DC01`), permitiendo autenticar usuarios corporativos directamente desde Active Directory — sin duplicar credenciales en un sistema paralelo.
-
-| Parámetro | Valor |
-|---|---|
-| Nombre del directorio | `AD Homelab` |
-| Servidor LDAP | `10.0.0.5` (SRV-DC01) |
-| Puerto | `389` (LDAP estándar) |
-| BaseDN | `DC=homelab,DC=local` |
-| RootDN | `CN=BorisAdmin,CN=Users,DC=homelab,DC=local` |
-
-![Configuración del directorio LDAP AD Homelab en GLPI](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/Sincronizando%20GPLI%20con%20el%20servidor.png)
-
-![Prueba de conexión LDAP exitosa — Servidor principal AD Homelab](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/Prueba%20exitosa%20con%20GLPI.png)
-
-*La integración LDAP cierra el ciclo de identidad del laboratorio: un único directorio centralizado (Active Directory) gobierna el acceso al DC, las GPOs y el sistema ITSM. Este patrón de autenticación unificada replica exactamente cómo funciona en entornos empresariales reales.*
-
----
-
-### 5.3 · Inventario de Activos del Laboratorio
-
-Registro y catalogación de los activos del homelab en el módulo **Activos** de GLPI. Cada equipo queda inventariado con su tipo, fabricante, número de serie y sistema operativo — información esencial para la gestión del ciclo de vida del hardware y el soporte técnico.
-
-![Dashboard del módulo Activos de GLPI](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/GLPI%20menu.png)
-
-| Activo | Tipo | Fabricante | Número de serie | S.O. |
-|---|---|---|---|---|
-| `SRV-DC01` | Servidor | VirtualBox | `SN-WS2022-001` | Windows Server 2022 |
-| `PC1-USUARIO` | Sobremesa | — | — | — |
-
-![Lista de ordenadores inventariados en GLPI con SRV-DC01 y PC1-USUARIO](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/GLPI%20activos.png)
-
-*Un inventario actualizado es el punto de partida de cualquier gestión IT madura: permite asociar tickets a activos concretos, planificar sustituciones de hardware y demostrar cobertura ante auditorías de cumplimiento.*
-
----
-
-### 5.4 · Gestión y Resolución de Tickets de Soporte
-
-Demostración del flujo completo de **Help Desk** en GLPI: apertura de una incidencia, registro de intervenciones sucesivas y documentación de la resolución — replicando el workflow ITIL de un departamento IT real.
-
-![Flujo de resolución de ticket de soporte en GLPI](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/GLPI%20resolucion%20de%20tickets.png)
-
-*El ciclo de vida del ticket en GLPI — apertura → intervenciones → resolución — es el flujo operativo diario de cualquier equipo de soporte. La trazabilidad completa de fechas, estados y agentes es fundamental para cumplir SLAs y analizar el rendimiento del servicio.*
+| Ejercicio | Tecnologías clave | Descripción |
+|---|---|---|
+| [🎫 ITSM & Gestión de Activos con GLPI](Sistema%20de%20Ticketing%20y%20Activos%20con%20GLPI/README.md) | GLPI · Apache2 · LDAP/AD | Despliegue integrado con Active Directory, inventario de activos y gestión de tickets de soporte |
+| [🔀 Segmentación de Red — DMZ y Guest](DMZ%20y%20Red%20de%20Invitados/README.md) | OPNsense · Firewall Rules | Interfaces DMZ y Guest aisladas de la LAN con acceso a internet mediante reglas de firewall |
 
 ---
 
@@ -442,7 +385,7 @@ Demostración del flujo completo de **Help Desk** en GLPI: apertura de una incid
 |---------------------|-------------------------------------------------------------------|
 | Virtualización      | Oracle VirtualBox                                                 |
 | Sistemas Operativos | Windows Server 2022 · Windows 11 Pro · Ubuntu · Kali Linux        |
-| Firewall/Router     | OPNsense 26.1.2 (FreeBSD)                                        |
+| Firewall/Router     | OPNsense 26.1.2 (FreeBSD) · Segmentación DMZ · Red de Invitados  |
 | IDS/IPS             | Suricata (integrado en OPNsense) · ET Open Rulesets              |
 | SIEM                | Wazuh v4.7.5 · MITRE ATT&CK · SCA · Vulnerability Detection      |
 | ITSM                | GLPI · Apache2 · Integración LDAP/Active Directory               |
@@ -466,6 +409,7 @@ Demostración del flujo completo de **Help Desk** en GLPI: apertura de una incid
 | IDS/IPS con Suricata              | ✅ Completado    |
 | SIEM con Wazuh                    | ✅ Completado    |
 | ITSM con GLPI                     | ✅ Completado    |
+| Segmentación de Red (DMZ y Guest) | ✅ Completado    |
 | Network Topologies (Cisco PT)     | 🔄 En progreso  |
 
 ---
