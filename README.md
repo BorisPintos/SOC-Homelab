@@ -107,6 +107,58 @@ Uso de **Windows Performance Monitor** para analizar contadores de sistema en ti
 
 ---
 
+### 1.6 · Configuración de File Server y Permisos NTFS
+
+Implementación del rol **File and Storage Services** en Windows Server 2022, creando un servidor de archivos corporativo con control de acceso granular mediante **permisos NTFS**. El modelo de permisos basado en grupos de Active Directory garantiza que cada usuario acceda únicamente a los recursos que le corresponden según su rol en el dominio.
+
+![Instalación del rol File and Storage Services en Server Manager](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(1).png)
+
+![Asistente de nueva carpeta compartida — ruta y nombre del recurso](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(2).png)
+
+![Configuración del control de acceso de la carpeta compartida](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(3).png)
+
+![Editor de permisos NTFS avanzados — asignando grupos de AD](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(4).png)
+
+![Verificación de la herencia y estructura de permisos NTFS](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(5).png)
+
+![Acceso validado al recurso compartido desde Windows 11 (PC1)](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(6).png)
+
+| Parámetro           | Valor                                         |
+|---------------------|-----------------------------------------------|
+| Rol instalado       | File and Storage Services                     |
+| Protocolo de acceso | SMB (recurso compartido de red)               |
+| Modelo de permisos  | NTFS + Share, basado en grupos de AD          |
+| Cliente de prueba   | PC1 — Windows 11 unido a `homelab.local`      |
+
+*El doble modelo de permisos (Share + NTFS) es el estándar corporativo: los permisos de Share determinan el acceso desde la red, mientras que los NTFS actúan como segunda capa aplicada sobre el sistema de archivos local. El permiso efectivo siempre es el más restrictivo de los dos.*
+
+---
+
+### 1.7 · Despliegue de Imagen por Red — PXE Boot (IPv4)
+
+Configuración de la infraestructura de **arranque PXE** (Preboot Execution Environment) sobre la red interna, aprovechando el servidor DHCP existente en Windows Server 2022 para proporcionar las opciones de red necesarias. PXE permite arrancar un equipo directamente desde la red sin ningún medio físico, transfiriendo una imagen del sistema operativo desde un servidor centralizado.
+
+![Configuración de las opciones PXE en el servidor DHCP](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(1).png)
+
+![Servidor TFTP activo — sirviendo el bootloader PXE](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(2).png)
+
+![Cliente iniciando el proceso de arranque por red](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(3).png)
+
+![Validación de la negociación DHCP/PXE en la red](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(4).png)
+
+| Componente     | Valor                                               |
+|----------------|-----------------------------------------------------|
+| Protocolo      | PXE sobre IPv4                                      |
+| Servidor DHCP  | Windows Server 2022 (`192.168.0.17`)                |
+| Red PXE        | ✅ Negociación DHCP y arranque PXE validados        |
+| Limitación     | Despliegue de imagen interrumpido por I/O del hipervisor |
+
+> **Nota técnica:** El despliegue completo de la imagen fue interrumpido por limitaciones de rendimiento de I/O en VirtualBox — las operaciones de escritura masiva durante el despliegue saturan el bus de almacenamiento virtual. La infraestructura de red PXE, la negociación DHCP y el arranque inicial del cliente por red fueron validados correctamente.
+
+*PXE es la base de los sistemas de despliegue masivo empresariales (WDS, MDT, SCCM/MECM). Dominar su infraestructura subyacente — opciones DHCP 66/67, TFTP, bootloader — es un prerequisito para cualquier administrador de sistemas que gestione despliegues a escala.*
+
+---
+
 ## Área 2 — Linux & Automatización
 
 > **Objetivo:** Demostrar capacidad de scripting, administración remota segura y optimización del entorno de trabajo en Linux mediante la automatización de tareas repetitivas de Help Desk y el control estricto de permisos.
@@ -148,6 +200,41 @@ Conexión desde el equipo Windows al servidor Linux mediante **SSH**, demostrand
 ![Conexión SSH desde Windows al equipo Linux con comandos chown/chmod](img/Ussando%20SSH%20para%20conectarme%20al%20pc%20de%20Linux%20desde%20mi%20pc%20de%20Windows.png)
 
 *La sesión SSH inter-VM demuestra: autenticación remota, navegación del sistema de archivos y aplicación del modelo de permisos POSIX (`rwxr-xr-x`) — equivalente Linux al modelo NTFS/Share de Windows.*
+
+---
+
+### 2.4 · Monitorización Proactiva de Servicios — Network Health Checker (PowerShell)
+
+Script de **monitorización de infraestructura** desarrollado en PowerShell que verifica automáticamente el estado de los tres nodos críticos del laboratorio: conectividad ICMP y disponibilidad del puerto de servicio principal en cada servidor. El resultado se exporta en formato **CSV** para facilitar la revisión y el seguimiento histórico del estado de la red.
+
+```powershell
+$Servers = @(
+    @{ Name = "SRV-DC01";        IP = "10.0.0.5";   Port = 53;  Service = "DNS / Active Directory" },
+    @{ Name = "Ubuntu-Linux";    IP = "10.0.0.101"; Port = 22;  Service = "SSH"                    },
+    @{ Name = "Router-OPNsense"; IP = "10.0.0.1";   Port = 443; Service = "Web GUI / HTTPS"        }
+)
+
+$Results = foreach ($Server in $Servers) {
+    $Ping      = Test-Connection -ComputerName $Server.IP -Count 1 -Quiet
+    $PortCheck = if ($Ping) { Test-NetConnection -ComputerName $Server.IP -Port $Server.Port -InformationLevel Quiet } else { $false }
+    $Status    = if ($Ping -and $PortCheck) { "ONLINE" } elseif ($Ping) { "PUERTO CERRADO" } else { "OFFLINE" }
+
+    [PSCustomObject]@{ Servidor = $Server.Name; IP = $Server.IP; Servicio = $Server.Service; Puerto = $Server.Port; Estado = $Status }
+}
+
+$Results | Format-Table -AutoSize
+$Results | Export-Csv -Path "C:\Reports_Escaner\Estado_Red.csv" -NoTypeInformation
+```
+
+| Nodo             | IP            | Puerto | Servicio               |
+|------------------|---------------|--------|------------------------|
+| SRV-DC01         | `10.0.0.5`    | 53     | DNS / Active Directory |
+| Ubuntu-Linux     | `10.0.0.101`  | 22     | SSH                    |
+| Router-OPNsense  | `10.0.0.1`    | 443    | Web GUI / HTTPS        |
+
+*El script distingue tres estados: `ONLINE` (ping y puerto accesible), `PUERTO CERRADO` (host activo pero servicio no responde) y `OFFLINE` (sin conectividad). El reporte CSV en `C:\Reports_Escaner\Estado_Red.csv` permite comparar ejecuciones sucesivas y detectar degradación de servicio antes de que impacte al usuario.*
+
+**Habilidades demostradas:** `Test-Connection`, `Test-NetConnection`, `[PSCustomObject]`, `Export-Csv`, iteración `foreach`.
 
 ---
 
@@ -261,6 +348,38 @@ Con Suricata activo y los rulesets ET Open habilitados, el tráfico generado des
 | WAN bloqueado | `216.58.204.165:443` → `192.168.0.21` |
 
 *El log de alertas muestra múltiples eventos `blocked` contra la misma IP de Kali, confirmando que Suricata actuó como IPS real: no solo detectó el patrón malicioso sino que descartó los paquetes antes de que alcanzaran el destino. Esto cierra el ciclo ofensiva/defensiva del laboratorio.*
+
+---
+
+### 3.8 · Filtrado DNS en la Red — AdGuard Home desplegado con Docker
+
+Despliegue de **AdGuard Home** como servidor DNS recursivo con filtrado de contenido, ejecutándose en un contenedor **Docker** y escuchando en el puerto estándar DNS (53). Actúa como primera línea de defensa a nivel de red: bloquea dominios maliciosos, trackers y publicidad antes de que el tráfico llegue al endpoint.
+
+![Contenedor adguardhome corriendo en Docker Desktop](img/Despliegue%20de%20AdGuard%20Home%20mediante%20Docker%20para%20filtrado%20DNS-1.png)
+
+| Parámetro         | Valor                          |
+|-------------------|--------------------------------|
+| Imagen Docker     | `adguard/adguardhome`          |
+| Nombre contenedor | `adguardhome`                  |
+| Container ID      | `1196204c2259`                 |
+| Puerto expuesto   | `53:53` (DNS)                  |
+| Puerto admin      | `53:53` + interfaz web `8080`  |
+| CPU en reposo     | 0.23%                          |
+| Memoria           | ~51.76 MB                      |
+
+*Docker Desktop confirma el contenedor activo con el puerto 53 correctamente mapeado al host. Usar Docker para desplegar AdGuard Home aísla el servicio del sistema operativo subyacente y simplifica su actualización y portabilidad.*
+
+![Dashboard de AdGuard Home con estadísticas de filtrado DNS](img/Despliegue%20de%20AdGuard%20Home%20mediante%20Docker%20para%20filtrado%20DNS.png)
+
+| Métrica (últimas 24h)       | Valor        |
+|-----------------------------|--------------|
+| DNS Queries totales         | 90           |
+| Bloqueadas por filtros      | 6 (6.67%)    |
+| Tiempo medio de resolución  | 47 ms        |
+| Top client                  | `172.17.0.1` (red bridge Docker) |
+| Top dominio bloqueado       | `adtcdn.unidadeditorial.es` |
+
+*El dashboard consolida en una sola vista las consultas DNS de la red, la tasa de bloqueo y los dominios más solicitados. El cliente `172.17.0.1` corresponde a la gateway de la red interna de Docker, confirmando que el contenedor resuelve peticiones desde la propia máquina host. Un analista Blue Team usa esta visibilidad DNS para detectar beaconing de malware o resoluciones a dominios C2 conocidos.*
 
 ---
 
@@ -384,15 +503,19 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 | Categoría           | Tecnología                                                        |
 |---------------------|-------------------------------------------------------------------|
 | Virtualización      | Oracle VirtualBox                                                 |
+| Contenedores        | Docker Desktop · adguard/adguardhome                             |
 | Sistemas Operativos | Windows Server 2022 · Windows 11 Pro · Ubuntu · Kali Linux        |
 | Firewall/Router     | OPNsense 26.1.2 (FreeBSD) · Segmentación DMZ · Red de Invitados  |
 | IDS/IPS             | Suricata (integrado en OPNsense) · ET Open Rulesets              |
+| Filtrado DNS        | AdGuard Home (Docker) · Bloqueo de trackers y dominios maliciosos |
 | SIEM                | Wazuh v4.7.5 · MITRE ATT&CK · SCA · Vulnerability Detection      |
 | ITSM                | GLPI · Apache2 · Integración LDAP/Active Directory               |
 | Directorio Activo   | Active Directory DS · DNS · DHCP · GPO · GPMC                    |
-| Automatización      | PowerShell · Bash · `.bashrc` aliases                             |
+| File Services       | File and Storage Services · NTFS Permissions · SMB Shares         |
+| Despliegue          | PXE Boot (IPv4) · TFTP · DHCP Options 66/67                      |
+| Automatización      | PowerShell · Bash · `.bashrc` aliases · Health Checker (CSV)      |
 | Seguridad Ofensiva  | Hydra · Kali Linux (entorno controlado)                           |
-| Seguridad Defensiva | Windows Event Viewer · Windows Defender Firewall · Suricata IPS   |
+| Seguridad Defensiva | Windows Event Viewer · Windows Defender Firewall · Suricata IPS · AdGuard Home |
 | Administración      | SSH · CMD · PowerShell ISE · Server Manager                       |
 | Monitorización      | Performance Monitor · Event Log (Security Channel) · Wazuh SIEM  |
 | Cumplimiento        | CIS Benchmark (Win Server 2022) · PCI DSS                        |
@@ -404,9 +527,13 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 | Área                              | Estado          |
 |-----------------------------------|-----------------|
 | Windows Enterprise Infrastructure | ✅ Completado    |
+| File Server & Permisos NTFS       | ✅ Completado    |
+| Despliegue PXE Boot               | ✅ Red validada  |
 | Linux & Automatización            | ✅ Completado    |
+| Monitorización con Health Checker | ✅ Completado    |
 | Blue Team / Seguridad Defensiva   | ✅ Completado    |
 | IDS/IPS con Suricata              | ✅ Completado    |
+| Filtrado DNS con AdGuard Home     | ✅ Completado    |
 | SIEM con Wazuh                    | ✅ Completado    |
 | ITSM con GLPI                     | ✅ Completado    |
 | Segmentación de Red (DMZ y Guest) | ✅ Completado    |
