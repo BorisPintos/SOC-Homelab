@@ -159,6 +159,37 @@ Configuración de la infraestructura de **arranque PXE** (Preboot Execution Envi
 
 ---
 
+### 1.8 · Backup y Disaster Recovery — Veeam Backup & Replication
+
+Despliegue de **Veeam Backup & Replication**, la solución de backup empresarial para entornos virtualizados más utilizada en la industria. Permite crear copias de seguridad consistentes de las máquinas virtuales, programar trabajos de backup incrementales y garantizar puntos de restauración verificados — eliminando el escenario de "backup que falla al restaurar en producción".
+
+![Interfaz principal de Veeam Backup & Replication](img/Veeam%20(1).png)
+
+![Añadiendo infraestructura virtualizada a Veeam](img/Veeam%20(2).png)
+
+![Configuración del trabajo de backup — selección de VMs](img/Veeam%20(3).png)
+
+![Ajustes de almacenamiento y política de retención](img/Veeam%20(4).png)
+
+![Programación del job de backup](img/Veeam%20(5).png)
+
+![Backup en ejecución — progreso en tiempo real](img/Veeam%20(6).png)
+
+![Trabajo completado — resumen de sesión](img/Veeam%20(7).png)
+
+![Punto de restauración disponible en el repositorio](img/Veeam%20(8).png)
+
+| Parámetro            | Valor                                        |
+|----------------------|----------------------------------------------|
+| Herramienta          | Veeam Backup & Replication                   |
+| Tipo de backup       | Backup incremental de VMs (imagen completa)  |
+| Hipervisor           | Oracle VirtualBox                            |
+| Resultado            | ✅ Puntos de restauración creados y validados |
+
+*Veeam es el estándar de facto en backup empresarial porque garantiza la consistencia de la VM en caliente (VSS/quiescing) y permite restauraciones granulares a nivel de archivo o de disco completo. El dominio de esta herramienta es directamente transferible a entornos de producción con VMware o Hyper-V.*
+
+---
+
 ## Área 2 — Linux & Automatización
 
 > **Objetivo:** Demostrar capacidad de scripting, administración remota segura y optimización del entorno de trabajo en Linux mediante la automatización de tareas repetitivas de Help Desk y el control estricto de permisos.
@@ -235,6 +266,27 @@ $Results | Export-Csv -Path "C:\Reports_Escaner\Estado_Red.csv" -NoTypeInformati
 *El script distingue tres estados: `ONLINE` (ping y puerto accesible), `PUERTO CERRADO` (host activo pero servicio no responde) y `OFFLINE` (sin conectividad). El reporte CSV en `C:\Reports_Escaner\Estado_Red.csv` permite comparar ejecuciones sucesivas y detectar degradación de servicio antes de que impacte al usuario.*
 
 **Habilidades demostradas:** `Test-Connection`, `Test-NetConnection`, `[PSCustomObject]`, `Export-Csv`, iteración `foreach`.
+
+---
+
+### 2.5 · Monitorización de Disponibilidad — Uptime Kuma (Docker)
+
+Despliegue de **Uptime Kuma**, herramienta de monitorización self-hosted de alta disponibilidad ejecutada en Docker. Proporciona monitorización continua de servicios mediante HTTP/HTTPS, TCP y DNS, con alertas configurables y panel de estado en tiempo real — alternativa open-source a UptimeRobot con control total sobre los datos y sin límite de monitores.
+
+![Configuración inicial de Uptime Kuma en Docker](img/Configurando%20Uptime%20Kuma%20(1).png)
+
+![Dashboard de Uptime Kuma con monitores del homelab](img/Configurando%20Uptime%20Kuma%20(2).png)
+
+![Página de estado y métricas de disponibilidad](img/Configurando%20Uptime%20Kuma%20(3).png)
+
+| Parámetro       | Valor                                         |
+|-----------------|-----------------------------------------------|
+| Imagen Docker   | `louislam/uptime-kuma`                        |
+| Protocolos      | HTTP · HTTPS · TCP · DNS                      |
+| Servicios monitorizados | Nodos críticos del homelab            |
+| Resultado       | ✅ Monitorización continua operativa           |
+
+*Uptime Kuma complementa el Health Checker de PowerShell de la sección 2.4: mientras el script genera informes bajo demanda, Uptime Kuma monitoriza de forma continua y alerta en el instante en que un servicio cae — cerrando el ciclo de observabilidad del laboratorio con detección proactiva.*
 
 ---
 
@@ -383,6 +435,26 @@ Despliegue de **AdGuard Home** como servidor DNS recursivo con filtrado de conte
 
 ---
 
+### 3.9 · Configuración de Proxy Web en la Red
+
+Configuración de un servicio de **proxy** en la infraestructura del laboratorio para controlar y gestionar el tráfico web de los clientes de la red interna. El proxy actúa como intermediario entre los equipos de la LAN y los servicios externos, permitiendo inspección, filtrado y registro centralizado del tráfico HTTP/HTTPS.
+
+![Instalación y configuración inicial del proxy](img/Configurando%20proxy%20(1).png)
+
+![Configuración de reglas y políticas de acceso](img/Configurando%20proxy%20(2).png)
+
+![Verificación del tráfico enrutado a través del proxy](img/Configurando%20proxy%20(3).png)
+
+| Parámetro          | Valor                                         |
+|--------------------|-----------------------------------------------|
+| Función            | Proxy web / control de tráfico HTTP           |
+| Integración        | Red interna del laboratorio                   |
+| Resultado          | ✅ Tráfico enrutado y verificado              |
+
+*Un proxy en la red corporativa es un punto de control central: permite aplicar políticas de acceso, generar logs de tráfico y correlacionar actividad de red en el SIEM. Desde la perspectiva Blue Team, el proxy es una fuente de telemetría valiosa para detectar comportamientos anómalos como peticiones a dominios C2.*
+
+---
+
 ## Área 4 — SIEM & Threat Hunting con Wazuh 🔍
 
 > **Objetivo:** Desplegar una plataforma SIEM de grado empresarial, conectar el Domain Controller como agente monitorizado y demostrar capacidades de detección de vulnerabilidades, análisis de eventos de seguridad, correlación con MITRE ATT&CK y cumplimiento normativo (CIS Benchmark / PCI DSS).
@@ -503,7 +575,7 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 | Categoría           | Tecnología                                                        |
 |---------------------|-------------------------------------------------------------------|
 | Virtualización      | Oracle VirtualBox                                                 |
-| Contenedores        | Docker Desktop · adguard/adguardhome                             |
+| Contenedores        | Docker Desktop · adguard/adguardhome · louislam/uptime-kuma      |
 | Sistemas Operativos | Windows Server 2022 · Windows 11 Pro · Ubuntu · Kali Linux        |
 | Firewall/Router     | OPNsense 26.1.2 (FreeBSD) · Segmentación DMZ · Red de Invitados  |
 | IDS/IPS             | Suricata (integrado en OPNsense) · ET Open Rulesets              |
@@ -517,7 +589,9 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 | Seguridad Ofensiva  | Hydra · Kali Linux (entorno controlado)                           |
 | Seguridad Defensiva | Windows Event Viewer · Windows Defender Firewall · Suricata IPS · AdGuard Home |
 | Administración      | SSH · CMD · PowerShell ISE · Server Manager                       |
-| Monitorización      | Performance Monitor · Event Log (Security Channel) · Wazuh SIEM  |
+| Backup / DR         | Veeam Backup & Replication · Backup incremental de VMs           |
+| Monitorización      | Performance Monitor · Uptime Kuma · Event Log · Wazuh SIEM       |
+| Proxy               | Proxy web · Filtrado de tráfico HTTP/HTTPS                        |
 | Cumplimiento        | CIS Benchmark (Win Server 2022) · PCI DSS                        |
 
 ---
@@ -531,6 +605,9 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 | Despliegue PXE Boot               | ✅ Red validada  |
 | Linux & Automatización            | ✅ Completado    |
 | Monitorización con Health Checker | ✅ Completado    |
+| Uptime Kuma (Docker)              | ✅ Completado    |
+| Backup con Veeam                  | ✅ Completado    |
+| Proxy Web                         | ✅ Completado    |
 | Blue Team / Seguridad Defensiva   | ✅ Completado    |
 | IDS/IPS con Suricata              | ✅ Completado    |
 | Filtrado DNS con AdGuard Home     | ✅ Completado    |
