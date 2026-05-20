@@ -1,6 +1,41 @@
-# 🏠 Enterprise Homelab — Boris Pintos
+# 🏠 IT Infrastructure & Security Homelab — Boris Pintos
 
-> Laboratorio virtualizado de infraestructura corporativa, automatización y seguridad defensiva construido sobre VirtualBox. Cada sección demuestra habilidades técnicas aplicadas en un entorno controlado que replica escenarios del mundo real.
+> Laboratorio virtualizado para practicar administración de sistemas, redes, automatización, monitorización y seguridad defensiva en un entorno controlado.
+
+Este proyecto documenta la construcción de una pequeña infraestructura corporativa de laboratorio usando **Windows Server, Active Directory, Linux, OPNsense, Docker, Wazuh, Suricata, GLPI y Veeam**. El objetivo no es simular una empresa completa, sino demostrar competencias prácticas y transferibles a roles de **IT Support, Junior SysAdmin y operaciones de infraestructura**.
+
+---
+
+## Qué Demuestra Este Proyecto
+
+- Despliegue y administración de un entorno Windows con **Active Directory, DNS, DHCP, GPOs y permisos NTFS**.
+- Integración de clientes y servicios dentro de una red de laboratorio con validaciones de conectividad.
+- Segmentación de red con **OPNsense**, reglas de firewall, DMZ, red de invitados y filtrado DNS.
+- Uso de herramientas de monitorización, backup e ITSM: **Uptime Kuma, Performance Monitor, Veeam y GLPI**.
+- Prácticas de seguridad defensiva: auditoría de eventos Windows, Wazuh, Suricata IDS/IPS y simulaciones controladas.
+- Automatización básica con **PowerShell y Bash** para tareas repetitivas de administración.
+- Documentación técnica con capturas, tablas de parámetros, resultados y limitaciones.
+
+---
+
+## Mapa Rápido
+
+| Área | Qué incluye | Competencias demostradas |
+|---|---|---|
+| Windows Server & AD | DC, DNS, DHCP, GPO, File Server, PXE | Administración de infraestructura Microsoft |
+| Linux & Automatización | SSH, permisos, alias, scripts PowerShell | Operaciones, scripting y troubleshooting |
+| Redes & Perímetro | OPNsense, LAN/DMZ/Guest, proxy, AdGuard | Segmentación, firewalling y servicios de red |
+| Monitorización & Continuidad | Uptime Kuma, Performance Monitor, Veeam | Observabilidad básica, backup y recuperación |
+| Seguridad Defensiva | Event Viewer, Wazuh, Suricata, Hydra controlado | Detección, logs y análisis de eventos |
+| ITSM | GLPI integrado con LDAP/AD | Ticketing, inventario y soporte técnico |
+
+---
+
+## Alcance del Laboratorio
+
+El laboratorio está montado sobre máquinas virtuales y servicios self-hosted. Algunas pruebas reproducen patrones de entornos corporativos, pero siempre dentro de una red aislada y con máquinas propias.
+
+Las secciones de seguridad deben leerse como **prácticas defensivas de aprendizaje**: configuración, observación de logs, detección y validación de controles. No pretende presentarse como experiencia profesional de analista de seguridad, sino como evidencia de base técnica y capacidad de aprendizaje aplicada.
 
 ---
 
@@ -36,9 +71,9 @@
 
 ---
 
-## Área 1 — Windows Enterprise Infrastructure
+## Área 1 — Infraestructura Windows y Active Directory
 
-> **Objetivo:** Desplegar y administrar una red corporativa aislada con gestión centralizada de usuarios, políticas de grupo y monitorización de rendimiento, replicando el stack tecnológico de un entorno Active Directory real.
+> **Objetivo:** Desplegar y administrar una red corporativa aislada con gestión centralizada de usuarios, políticas de grupo y monitorización de rendimiento, replicando servicios habituales de un entorno Active Directory.
 
 ### 1.1 · Controlador de Dominio en Windows Server 2022
 
@@ -111,17 +146,17 @@ Uso de **Windows Performance Monitor** para analizar contadores de sistema en ti
 
 Implementación del rol **File and Storage Services** en Windows Server 2022, creando un servidor de archivos corporativo con control de acceso granular mediante **permisos NTFS**. El modelo de permisos basado en grupos de Active Directory garantiza que cada usuario acceda únicamente a los recursos que le corresponden según su rol en el dominio.
 
-![Instalación del rol File and Storage Services en Server Manager](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(1).png)
+![Instalación del rol File and Storage Services en Server Manager](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20%281%29.png)
 
-![Asistente de nueva carpeta compartida — ruta y nombre del recurso](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(2).png)
+![Asistente de nueva carpeta compartida — ruta y nombre del recurso](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20%282%29.png)
 
-![Configuración del control de acceso de la carpeta compartida](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(3).png)
+![Configuración del control de acceso de la carpeta compartida](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20%283%29.png)
 
-![Editor de permisos NTFS avanzados — asignando grupos de AD](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(4).png)
+![Editor de permisos NTFS avanzados — asignando grupos de AD](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20%284%29.png)
 
-![Verificación de la herencia y estructura de permisos NTFS](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(5).png)
+![Verificación de la herencia y estructura de permisos NTFS](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20%285%29.png)
 
-![Acceso validado al recurso compartido desde Windows 11 (PC1)](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20(6).png)
+![Acceso validado al recurso compartido desde Windows 11 (PC1)](img/Configuracion%20File%20Server%20%26%20Permisos%20NTFS%20%286%29.png)
 
 | Parámetro           | Valor                                         |
 |---------------------|-----------------------------------------------|
@@ -138,13 +173,13 @@ Implementación del rol **File and Storage Services** en Windows Server 2022, cr
 
 Configuración de la infraestructura de **arranque PXE** (Preboot Execution Environment) sobre la red interna, aprovechando el servidor DHCP existente en Windows Server 2022 para proporcionar las opciones de red necesarias. PXE permite arrancar un equipo directamente desde la red sin ningún medio físico, transfiriendo una imagen del sistema operativo desde un servidor centralizado.
 
-![Configuración de las opciones PXE en el servidor DHCP](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(1).png)
+![Configuración de las opciones PXE en el servidor DHCP](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20%281%29.png)
 
-![Servidor TFTP activo — sirviendo el bootloader PXE](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(2).png)
+![Servidor TFTP activo — sirviendo el bootloader PXE](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20%282%29.png)
 
-![Cliente iniciando el proceso de arranque por red](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(3).png)
+![Cliente iniciando el proceso de arranque por red](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20%283%29.png)
 
-![Validación de la negociación DHCP/PXE en la red](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20(4).png)
+![Validación de la negociación DHCP/PXE en la red](img/Despliegue%20Imagen%20por%20PXE%20IPv4%20%284%29.png)
 
 | Componente     | Valor                                               |
 |----------------|-----------------------------------------------------|
@@ -161,23 +196,23 @@ Configuración de la infraestructura de **arranque PXE** (Preboot Execution Envi
 
 ### 1.8 · Backup y Disaster Recovery — Veeam Backup & Replication
 
-Despliegue de **Veeam Backup & Replication**, la solución de backup empresarial para entornos virtualizados más utilizada en la industria. Permite crear copias de seguridad consistentes de las máquinas virtuales, programar trabajos de backup incrementales y garantizar puntos de restauración verificados — eliminando el escenario de "backup que falla al restaurar en producción".
+Despliegue de **Veeam Backup & Replication** para practicar copias de seguridad en entornos virtualizados. Permite crear backups consistentes de las máquinas virtuales, programar trabajos incrementales y validar puntos de restauración.
 
-![Interfaz principal de Veeam Backup & Replication](img/Veeam%20(1).png)
+![Interfaz principal de Veeam Backup & Replication](img/Veeam%20%281%29.png)
 
-![Añadiendo infraestructura virtualizada a Veeam](img/Veeam%20(2).png)
+![Añadiendo infraestructura virtualizada a Veeam](img/Veeam%20%282%29.png)
 
-![Configuración del trabajo de backup — selección de VMs](img/Veeam%20(3).png)
+![Configuración del trabajo de backup — selección de VMs](img/Veeam%20%283%29.png)
 
-![Ajustes de almacenamiento y política de retención](img/Veeam%20(4).png)
+![Ajustes de almacenamiento y política de retención](img/Veeam%20%284%29.png)
 
-![Programación del job de backup](img/Veeam%20(5).png)
+![Programación del job de backup](img/Veeam%20%285%29.png)
 
-![Backup en ejecución — progreso en tiempo real](img/Veeam%20(6).png)
+![Backup en ejecución — progreso en tiempo real](img/Veeam%20%286%29.png)
 
-![Trabajo completado — resumen de sesión](img/Veeam%20(7).png)
+![Trabajo completado — resumen de sesión](img/Veeam%20%287%29.png)
 
-![Punto de restauración disponible en el repositorio](img/Veeam%20(8).png)
+![Punto de restauración disponible en el repositorio](img/Veeam%20%288%29.png)
 
 | Parámetro            | Valor                                        |
 |----------------------|----------------------------------------------|
@@ -186,7 +221,7 @@ Despliegue de **Veeam Backup & Replication**, la solución de backup empresarial
 | Hipervisor           | Oracle VirtualBox                            |
 | Resultado            | ✅ Puntos de restauración creados y validados |
 
-*Veeam es el estándar de facto en backup empresarial porque garantiza la consistencia de la VM en caliente (VSS/quiescing) y permite restauraciones granulares a nivel de archivo o de disco completo. El dominio de esta herramienta es directamente transferible a entornos de producción con VMware o Hyper-V.*
+*El ejercicio permite practicar conceptos habituales de backup empresarial: consistencia de la VM, planificación de jobs, retención y comprobación de puntos de restauración. Aunque el laboratorio usa VirtualBox, el flujo de trabajo es transferible a entornos con VMware o Hyper-V.*
 
 ---
 
@@ -226,9 +261,9 @@ Configuración del archivo `/home/Boris/.bashrc` con un conjunto de **alias pers
 
 ### 2.3 · Gestión Remota Segura con SSH y Control de Permisos
 
-Conexión desde el equipo Windows al servidor Linux mediante **SSH**, demostrando administración remota segura. Durante la sesión se ejecutaron operaciones de control de permisos con `chown` y `chmod`, replicando el flujo de trabajo de un administrador en producción.
+Conexión desde el equipo Windows al servidor Linux mediante **SSH**, demostrando administración remota segura. Durante la sesión se ejecutaron operaciones de control de permisos con `chown` y `chmod`, replicando tareas habituales de administración Linux.
 
-![Conexión SSH desde Windows al equipo Linux con comandos chown/chmod](img/Ussando%20SSH%20para%20conectarme%20al%20pc%20de%20Linux%20desde%20mi%20pc%20de%20Windows.png)
+![Conexión SSH desde Windows al equipo Linux con comandos chown/chmod](img/Usando%20SSH%20para%20conectarme%20al%20pc%20de%20Linux%20desde%20mi%20pc%20de%20Windows.png)
 
 *La sesión SSH inter-VM demuestra: autenticación remota, navegación del sistema de archivos y aplicación del modelo de permisos POSIX (`rwxr-xr-x`) — equivalente Linux al modelo NTFS/Share de Windows.*
 
@@ -273,11 +308,11 @@ $Results | Export-Csv -Path "C:\Reports_Escaner\Estado_Red.csv" -NoTypeInformati
 
 Despliegue de **Uptime Kuma**, herramienta de monitorización self-hosted de alta disponibilidad ejecutada en Docker. Proporciona monitorización continua de servicios mediante HTTP/HTTPS, TCP y DNS, con alertas configurables y panel de estado en tiempo real — alternativa open-source a UptimeRobot con control total sobre los datos y sin límite de monitores.
 
-![Configuración inicial de Uptime Kuma en Docker](img/Configurando%20Uptime%20Kuma%20(1).png)
+![Configuración inicial de Uptime Kuma en Docker](img/Configurando%20Uptime%20Kuma%20%281%29.png)
 
-![Dashboard de Uptime Kuma con monitores del homelab](img/Configurando%20Uptime%20Kuma%20(2).png)
+![Dashboard de Uptime Kuma con monitores del homelab](img/Configurando%20Uptime%20Kuma%20%282%29.png)
 
-![Página de estado y métricas de disponibilidad](img/Configurando%20Uptime%20Kuma%20(3).png)
+![Página de estado y métricas de disponibilidad](img/Configurando%20Uptime%20Kuma%20%283%29.png)
 
 | Parámetro       | Valor                                         |
 |-----------------|-----------------------------------------------|
@@ -290,15 +325,15 @@ Despliegue de **Uptime Kuma**, herramienta de monitorización self-hosted de alt
 
 ---
 
-## Área 3 — Seguridad Defensiva (Blue Team) 🛡️
+## Área 3 — Seguridad Defensiva Aplicada 🛡️
 
-> **Objetivo:** Implementar controles de seguridad en capas (defense in depth): auditoría de accesos, endurecimiento del perímetro, IDS/IPS con reglas de amenazas reales y simulación de ataques, desarrollando la mentalidad de detección y respuesta del Blue Team.
+> **Objetivo:** Implementar controles de seguridad en capas: auditoría de accesos, endurecimiento del perímetro, IDS/IPS con reglas conocidas y simulaciones controladas para entender cómo se generan, detectan y analizan eventos de seguridad.
 
 ### 3.1 · Auditoría de Accesos con Event Viewer — Event ID 4663
 
 Configuración de políticas de **Object Access Auditing** en Windows y análisis del **Event ID 4663** ("Se intentó acceder a un objeto") en el Security Log. Este evento es crítico en la investigación forense: registra qué usuario accedió a qué archivo, desde qué proceso y en qué momento exacto.
 
-![Event Viewer filtrando el Event ID 4663 en el Security Log](img/Event%20Viewe%20Flitrer%204663.png)
+![Event Viewer filtrando el Event ID 4663 en el Security Log](img/Event%20Viewer%20Filter%204663.png)
 
 | Campo del evento | Valor                      |
 |------------------|----------------------------|
@@ -340,7 +375,7 @@ hydra -t 1 -l sofia.perez -P dictionary.txt rdp://10.0.0.100
 
 > ⚠️ **Entorno controlado:** Ejecutado exclusivamente dentro de la red virtual aislada del laboratorio, contra máquinas propias.
 
-**Perspectiva Blue Team:** Cada intento fallido genera un **Event ID 4625** en el Security Log. Un analista SOC configuraría una alerta cuando este evento supera un umbral (ej. >5 intentos en 60 segundos).
+**Perspectiva defensiva:** Cada intento fallido genera un **Event ID 4625** en el Security Log. En un entorno monitorizado, este tipo de evento podría alimentar una alerta cuando supera un umbral, por ejemplo más de 5 intentos en 60 segundos.
 
 ---
 
@@ -377,7 +412,7 @@ Activación del motor **Suricata** integrado en OPNsense como **IPS (Intrusion P
 
 ### 3.6 · IDS/IPS con Suricata — Reglas Emerging Threats Open
 
-Descarga y habilitación de los rulesets **ET Open** (Emerging Threats Open), el conjunto de firmas comunitario más utilizado en entornos de producción. Estos rulesets cubren categorías como escaneo de red, shellcode, SMTP malicioso y otras técnicas de ataque activas.
+Descarga y habilitación de los rulesets **ET Open** (Emerging Threats Open), un conjunto de firmas comunitario muy utilizado para detección de amenazas. Estos rulesets cubren categorías como escaneo de red, shellcode, SMTP malicioso y otras técnicas de ataque activas.
 
 ![Descarga de rulesets ET Open en OPNsense Intrusion Detection](img/Suricata%20Reglas%20ET%20Open.png)
 
@@ -431,7 +466,7 @@ Despliegue de **AdGuard Home** como servidor DNS recursivo con filtrado de conte
 | Top client                  | `172.17.0.1` (red bridge Docker) |
 | Top dominio bloqueado       | `adtcdn.unidadeditorial.es` |
 
-*El dashboard consolida en una sola vista las consultas DNS de la red, la tasa de bloqueo y los dominios más solicitados. El cliente `172.17.0.1` corresponde a la gateway de la red interna de Docker, confirmando que el contenedor resuelve peticiones desde la propia máquina host. Un analista Blue Team usa esta visibilidad DNS para detectar beaconing de malware o resoluciones a dominios C2 conocidos.*
+*El dashboard consolida en una sola vista las consultas DNS de la red, la tasa de bloqueo y los dominios más solicitados. El cliente `172.17.0.1` corresponde a la gateway de la red interna de Docker, confirmando que el contenedor resuelve peticiones desde la propia máquina host. Esta visibilidad DNS ayuda a identificar comportamientos anómalos, como resoluciones repetidas hacia dominios sospechosos.*
 
 ---
 
@@ -439,11 +474,11 @@ Despliegue de **AdGuard Home** como servidor DNS recursivo con filtrado de conte
 
 Configuración de un servicio de **proxy** en la infraestructura del laboratorio para controlar y gestionar el tráfico web de los clientes de la red interna. El proxy actúa como intermediario entre los equipos de la LAN y los servicios externos, permitiendo inspección, filtrado y registro centralizado del tráfico HTTP/HTTPS.
 
-![Instalación y configuración inicial del proxy](img/Configurando%20proxy%20(1).png)
+![Instalación y configuración inicial del proxy](img/Configurando%20proxy%20%281%29.png)
 
-![Configuración de reglas y políticas de acceso](img/Configurando%20proxy%20(2).png)
+![Configuración de reglas y políticas de acceso](img/Configurando%20proxy%20%282%29.png)
 
-![Verificación del tráfico enrutado a través del proxy](img/Configurando%20proxy%20(3).png)
+![Verificación del tráfico enrutado a través del proxy](img/Configurando%20proxy%20%283%29.png)
 
 | Parámetro          | Valor                                         |
 |--------------------|-----------------------------------------------|
@@ -451,13 +486,13 @@ Configuración de un servicio de **proxy** en la infraestructura del laboratorio
 | Integración        | Red interna del laboratorio                   |
 | Resultado          | ✅ Tráfico enrutado y verificado              |
 
-*Un proxy en la red corporativa es un punto de control central: permite aplicar políticas de acceso, generar logs de tráfico y correlacionar actividad de red en el SIEM. Desde la perspectiva Blue Team, el proxy es una fuente de telemetría valiosa para detectar comportamientos anómalos como peticiones a dominios C2.*
+*Un proxy en la red corporativa es un punto de control central: permite aplicar políticas de acceso, generar logs de tráfico y correlacionar actividad de red en el SIEM. Desde una perspectiva defensiva, el proxy aporta telemetría útil para detectar comportamientos anómalos como peticiones repetidas a dominios sospechosos.*
 
 ---
 
-## Área 4 — SIEM & Threat Hunting con Wazuh 🔍
+## Área 4 — SIEM y Análisis de Eventos con Wazuh 🔍
 
-> **Objetivo:** Desplegar una plataforma SIEM de grado empresarial, conectar el Domain Controller como agente monitorizado y demostrar capacidades de detección de vulnerabilidades, análisis de eventos de seguridad, correlación con MITRE ATT&CK y cumplimiento normativo (CIS Benchmark / PCI DSS).
+> **Objetivo:** Desplegar Wazuh en el laboratorio, conectar el Domain Controller como agente monitorizado y practicar análisis de eventos, detección de vulnerabilidades, correlación con MITRE ATT&CK y revisión de controles de configuración.
 
 ### 4.1 · Despliegue del Agente Wazuh en SRV-DC01
 
@@ -507,7 +542,7 @@ El panel de detalle del agente agrega múltiples dimensiones de análisis en una
 
 ### 4.3 · Análisis de Security Events
 
-El dashboard de **Security Events** de Wazuh consolida todos los eventos del agente en una vista de analista SOC: evolución temporal de alertas, distribución por grupo de regla y alineación con requisitos PCI DSS.
+El dashboard de **Security Events** de Wazuh consolida los eventos del agente en una vista centralizada: evolución temporal de alertas, distribución por grupo de regla y alineación con requisitos PCI DSS.
 
 ![Dashboard de Security Events de Wazuh para SRV-DC01](img/Wazuh%20Security%20Events%20Dashboard.png)
 
@@ -528,7 +563,7 @@ Navegación por el módulo **MITRE ATT&CK** de Wazuh para investigar la técnica
 
 ![Vista MITRE ATT&CK en Wazuh mostrando técnica Brute Force T1110](img/Wazuh%20MITRE%20ATT%26CK%20Brute%20Force.png)
 
-*La integración MITRE convierte logs crudos en inteligencia de amenazas contextualizada: permite al analista identificar no solo qué pasó, sino qué actor de amenaza podría estar detrás y qué otras técnicas suele combinar.*
+*La integración con MITRE ayuda a convertir eventos técnicos en contexto de seguridad: permite relacionar una alerta con tácticas y técnicas conocidas, y entender mejor qué comportamiento se está observando.*
 
 ---
 
@@ -555,7 +590,7 @@ El módulo de **Vulnerability Detection** de Wazuh realizó un escaneo completo 
 | CVE-2024-20683    | 7.8   | High      |
 | CVE-2024-20682    | 7.8   | High      |
 
-*El volumen de vulnerabilidades refleja que el servidor opera con la versión de evaluación de Windows Server 2022 sin patches aplicados — estado deliberado para el laboratorio. En un entorno de producción, este output priorizaría el patch management inmediato de los 40 CVEs críticos.*
+*El volumen de vulnerabilidades refleja que el servidor opera con la versión de evaluación de Windows Server 2022 sin patches aplicados, un estado deliberado para el laboratorio. El ejercicio sirve para entender cómo priorizar remediación: primero vulnerabilidades críticas, después altas y controles de configuración.*
 
 ---
 
@@ -600,7 +635,7 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 
 | Área                              | Estado          |
 |-----------------------------------|-----------------|
-| Windows Enterprise Infrastructure | ✅ Completado    |
+| Infraestructura Windows y AD      | ✅ Completado    |
 | File Server & Permisos NTFS       | ✅ Completado    |
 | Despliegue PXE Boot               | ✅ Red validada  |
 | Linux & Automatización            | ✅ Completado    |
@@ -608,7 +643,7 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 | Uptime Kuma (Docker)              | ✅ Completado    |
 | Backup con Veeam                  | ✅ Completado    |
 | Proxy Web                         | ✅ Completado    |
-| Blue Team / Seguridad Defensiva   | ✅ Completado    |
+| Seguridad Defensiva Aplicada      | ✅ Completado    |
 | IDS/IPS con Suricata              | ✅ Completado    |
 | Filtrado DNS con AdGuard Home     | ✅ Completado    |
 | SIEM con Wazuh                    | ✅ Completado    |
@@ -623,3 +658,4 @@ Laboratorios específicos documentados de forma independiente, cada uno con su p
 **[Ver perfil de GitHub](https://github.com/BorisPintos) · [LinkedIn](https://www.linkedin.com/in/boris-rodriguez-pintos/)**
 
 </div>
+
