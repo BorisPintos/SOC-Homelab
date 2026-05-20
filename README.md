@@ -41,32 +41,25 @@ Las secciones de seguridad deben leerse como **prácticas defensivas de aprendiz
 
 ## 🗺️ Arquitectura General del Laboratorio
 
-```
-                        ┌─────────────────────────────┐
-                        │  OPNsense 26.1.2 (FreeBSD)  │
-                        │  Firewall / Router + Suricata│
-                        │  WAN: 10.0.0.102/8 (DHCP)   │
-                        │  LAN: 192.168.1.1/24         │
-                        └────────────┬────────────────-┘
-                                     │
-                    ┌────────────────┴────────────────┐
-                    │         Red Interna (LAN)        │
-                    └──────┬──────────────────┬────────┘
-                           │                  │
-          ┌────────────────┴──┐    ┌──────────┴───────────┐
-          │ Windows Server 2022│    │    Ubuntu Linux       │
-          │ Domain Controller  │    │  Managed via SSH      │
-          │ AD · DNS · DHCP    │    │  GLPI · Apache2       │
-          │ Wazuh Agent v4.7.5 │    │  Wazuh Manager        │
-          │ IP: 192.168.0.17   │
-          └────────────────┬──┘
-                           │
-                  ┌────────┴──────────┐
-                  │  Windows 11 Pro   │
-                  │  PC1 (Cliente)    │
-                  │  Unido a dominio  │
-                  │  homelab.local    │
-                  └───────────────────┘
+```mermaid
+flowchart TB
+    internet["Internet / WAN"]
+    firewall["OPNsense 26.1.2<br/>Firewall + Router + Suricata<br/>WAN: 10.0.0.102/8<br/>LAN: 192.168.1.1/24"]
+    lan["Red interna LAN<br/>homelab.local"]
+    server["Windows Server 2022<br/>SRV-DC01<br/>AD DS + DNS + DHCP<br/>File Server + GPO<br/>Wazuh Agent<br/>IP: 192.168.0.17"]
+    client["Windows 11 Pro<br/>PC1-USUARIO<br/>Cliente unido a dominio"]
+    linux["Ubuntu Linux<br/>SSH + Apache2 + GLPI<br/>Wazuh Manager"]
+    containers["Servicios Docker<br/>Uptime Kuma<br/>AdGuard Home"]
+    security["Prácticas defensivas<br/>Event Viewer<br/>Suricata IDS/IPS<br/>Wazuh SIEM"]
+
+    internet --> firewall
+    firewall --> lan
+    lan --> server
+    lan --> client
+    lan --> linux
+    linux --> containers
+    server --> security
+    firewall --> security
 ```
 
 ---
